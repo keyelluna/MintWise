@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./cropper.min.css" />
+</head>
+<body class="h-screen w-screen overflow-y-auto md:overflow-hidden p-6 relative">
+
+    <div class="hidden md:block h-full" id="dashboardSection">
+
+        <div class="grid grid-cols-5 grid-rows-6 gap-4 h-full text-shadow-sm">
+
+            <!-- greet section -->
+            <div class="col-span-4 row-span-2 bg-custom-violet-300 p-8 rounded-3xl h-full flex flex-col justify-between w-full">
+
+                <div class="grid grid-cols-4 grid-rows-3 h-full w-full">
+                    <div class="col-start-4 row-span-1">
+                        <div class="flex justify-around bg-white p-4 rounded-md font-bold text-custom-violet-300 gap-4">
+                            <h4 class="currentDate"></h4>
+                            <h4 class="currentTime"></h4>
+                        </div>
+                    </div>
+
+                    <div class="col-start-1 col-span-3 row-start-2 h-full w-full">
+                        <div class="flex justify-between items-end text-white w-full text-shadow-md">
+                            <div class="space-y-4"> <h2 class="text-5xl font-semibold leading-tight">God Day, <span class="font-bold userFirstname"></span>!</h2>
+                                <p class="text-3xl">Have a nice <span class="currentDay"></span></p>
+                            </div>
+                        
+                        </div>
+                    </div>
+
+                    <div class="col-start-3 col-span-2 row-start-3 h-full w-full">
+                        <div>
+                                <h2 class="text-7xl font-bold whitespace-nowrap text-end text-white w-full text-shadow-md totalBalance"></h2>
+                            </div>
+                    </div>
+                </div>
+                    
+            </div>
+
+
+            <!-- account section -->
+            <div class="row-span-2 col-start-5 shadow-custom-dark rounded-3xl h-full" id="accountsection">
+        
+                <div class="grid grid-rows-6 h-full" id="accountSection">
+                    <div class="row-span-1">
+
+                        <div class="bg-custom-violet-300 p-4 rounded-t-3xl flex justify-between items-center">
+                            <h3 class="text-white font-semibold text-2xl text-shadow-md">My Profile</h3>
+                            
+                            <button id="logoutButton">
+                                <img src="./assets/log-out (1).png" alt="Log out" class="w-6 h-6">
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <div class="row-start-3 row-span-4 ">
+
+                        <div class=" px-2 space-y-2">
+
+                            <div class=" flex justify-center">
+                                <button class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center shadow-custom-outline" id="userButton">
+                                    <img src="./assets/user1.png" alt="User Profile" class="w-20 h-20 rounded-full" id="userProfile">
+                                </button>
+                            </div>
+                            
+
+                            <div class="text-center">
+                                <h3 class="text-xl text-custom-violet-1000 font-medium w-full leading-snug" id="userFullname"></h3>
+                                <h4 class="text-lg text-custom-violet-900 font-normal" id="studPos"></h4>
+                            </div>
+
+                        </div>
+                    
+                    </div>
+
+                </div>
+
+                <div class="h-full hidden" id="logoutSection">
+                    <div class="grid grid-rows-6 h-full">
+                        <div class="row-start-3 row-span-2 h-full flex justify-center">
+                            <h3 class="text-center text-3xl font-bold text-custom-violet-300">Log out?</h3>
+                        </div>
+                        <div class="row-start-5 row-span-2 h-full">
+                            <div class="flex justify-evenly">
+                                <button class="border border-custom-violet-300 px-5 py-1 rounded-xl text-xl font-semibold text-custom-violet-300 hover:bg-custom-violet-300 hover:text-white transition duration-500" id="logOutYes">Yes</button>
+                                <button class="border border-custom-violet-300 px-5 py-1 rounded-xl text-xl font-semibold text-custom-violet-300 hover:bg-custom-violet-300 hover:text-white transition duration-500" id="logOutNo">No</button>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        
+            <!-- Transaction -->
+            <div class="col-span-3 row-span-4 col-start-3 row-start-3 shadow-custom-dark rounded-3xl h-full">
+                <div class="grid grid-rows-6 h-full">
+                    <div class="row-start-1">
+
+                        <div class="bg-custom-violet-300 p-4 rounded-t-3xl">
+                            <h3 class="text-white font-semibold text-2xl text-shadow-md">Transaction History</h3>
+                        </div>
+                    </div>
+
+                    <div class="row-start-2 row-span-5 pb-5">
+                        
+                        <div class="text-center text-custom-violet-1000 h-full overflow-y-auto">
+                        <table class="w-full font-semibold text-lg transactionTable h-full">
+                            <thead class="sticky top-0 z-10 bg-white">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Action</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                        
+                        
+                    
+                    </div>
+                    </div>
+
+                    
+
+                </div>
+            </div>
+            
+            <!-- monthly total -->
+            <div class="col-span-2 row-span-3 col-start-1 row-start-3 shadow-custom-dark rounded-3xl h-full">
+                <div class="grid grid-rows-6 h-full">
+                    <div class="row-span-1">
+
+                        <div class="bg-custom-violet-300 p-4 rounded-t-3xl">
+                            <h3 class="text-white font-semibold text-2xl text-shadow-md">Monthly Total</h3>
+                        </div>
+
+                    </div>
+
+                    <div class="text-center p-2 text-custom-violet-1000 row-start-2">
+                        <table class="w-full font-semibold text-lg monthlyTotalTable">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+
+
+
+                    </div>
+
+                </div>
+            </div>
+            
+            <!-- deposit button -->
+            <button class="col-span-1 row-start-6 shadow-custom-dark rounded-3xl h-full hover:bg-custom-violet-300 transition duration-500  border-2 border-custom-violet-300 hover:border-white text-custom-violet-300 hover:text-white depositBtn">
+                <h1 class="text-2xl font-bold">Deposit</h1>
+            </button>
+
+            
+            <!-- deposit button -->
+            <button class="col-start-2 row-start-6 shadow-custom-dark rounded-3xl h-full hover:bg-custom-violet-300 transition duration-500 border-2 border-custom-violet-300 hover:border-white text-custom-violet-300 hover:text-white withdrawBtn">
+                <h1 class="text-2xl font-bold">Withdraw</h1>
+            </button>
+        </div>
+    </div>
+
+
+    <!-- Users Information -->
+
+    <div class="hidden" id="userInfo">
+        <div class="absolute h-full w-full inset-0 md:flex justify-center items-center p-10 ">
+            <div class="bg-white h-full w-1/3 rounded-2xl shadow-custom-dark relative md:p-12 ">
+
+                <div class="grid grid-rows-10 gap-3 px-2 h-full w-full space-y-4">
+
+                    <div class="row-start-1 row-span-1 flex justify-center h-full w-full">
+                        <button class="md:w-32 md:h-32 w-1/8  bg-gray-200 flex items-center justify-center shadow-custom-outline rounded-full" >
+                            <label for="profileUpload" class="flex items-center justify-center w-full h-full cursor-pointer ">
+                                <img src="./assets/user1.png" alt="User Profile" class="w-20 h-20 md:w-32 md:h-32 w-1/8 rounded-full" id="profile-image">
+                                <input type="file" id="profileUpload" accept="image/*" style="display: none;">
+                            </label>
+                        </button>
+                    </div>
+
+                    <div class="h-full row-start-3 row-span-8 w-full space-y-4">
+
+                        <form class="userInfoInput">
+                            <div class="md:flex">
+                                
+                                <div class="p-6 md:space-y-2 md:w-1/2">
+                                    <label for="firstName" class="m-2 text-lg font-semibold text-custom-violet-900 block">First Name</label>
+                                    <input type="text" class="border-2 border-custom-violet-300 rounded-lg p-1 w-full firstNameInput" id="mdFirstNameInput">
+                                </div>
+                                
+                                <div class="p-6 space-y-2 md:w-1/2">
+                                    <label for="lastName" class="m-2 md:text-lg font-medium md:font-semibold text-custom-violet-900 block">Last Name</label>
+                                    <input type="text" class="border-2 border-custom-violet-300 rounded-lg p-1 w-full lastNameInput" id="mdLastNameInput">
+                                </div>
+                                
+                            </div>
+
+                            <div class="md:flex justify-between px-6">
+                                <div class="flex">
+                                    <input type="checkbox" class="border-2 border-custom-violet-300 rounded-sm w-6 studentInput" id="mdStudentInput">
+                                    <label for="student" class="m-2 text-lg font-semibold text-custom-violet-900 block ">Student</label>
+                                </div>
+                                
+                                <div class="flex">
+                                    <input type="text" class="border-2 border-custom-violet-300 rounded-lg p-1 w-full positionInput" id="mdPositionInput">
+                                    <label for="position" class="m-2 text-lg font-semibold text-custom-violet-900 block "></label>
+                                </div>
+                            </div>
+
+                            <div class="px-6">
+                                <label for="email" class="m-2 text-lg font-semibold text-custom-violet-900 block">Email Address</label>
+                                <input type="text" class="border-2 border-custom-violet-300 rounded-lg p-1 w-full emailInput" id="mdEmailInput">
+                            </div>
+
+
+                            <div class="grid grid-rows-2 w-full px-8">
+                                <div class="row-start-2 row-span-1 grid grid-col-2 gap-4">
+                                    <button class="col-start-1 col-span-1 border border-custom-violet-300 px-5 py-1 rounded-xl text-xl font-semibold text-custom-violet-300 hover:bg-custom-violet-300 hover:text-white transition duration-500" id="userInfoBack">Back</button>
+                                    <button class="col-start-2 border border-custom-violet-300 px-5 py-1 rounded-xl text-xl font-semibold text-custom-violet-300 hover:bg-custom-violet-300 hover:text-white transition duration-500 userInfoSave" id="mdSaveButton">Save</button>
+                                </div>
+                            </div>
+                        </form>
+                        
+                    </div>
+                
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- deposit/withdraw action sm & dm-->
+            <div class="h-full w-full hidden" id="depositWithdraw">
+                <div class="absolute h-full w-full inset-0 flex justify-center items-center">
+                    <div class="bg-white md:w-1/3 md:shadow-custom-dark rounded-3xl md:p-6 h-auto">
+                        <div class="grid grid-rows-5 w-full space-y-4">
+                            <div class="flex justify-between p-6 row-span-1">
+                                <div class="h-full flex justify-center items-center">
+                                    <div class="space-y-1">
+                                        <h3 class="text-2xl font-medium text-custom-violet-300">Deposit Account</h3>
+                                        <h4 class="text-sm font-normal text-custom-violet-300">Input amount you want to deposit</h4>
+                                    </div>
+                                </div>
+
+                                <div class="bg-custom-violet-300 rounded-lg text-white h-full md:flex justify-center items-center hidden">
+                                    <div class="w-32 px-2">
+                                        <h3 class="currentTime font-normal text-sm"></h3>
+                                        <h3 class="currentDate font-medium"></h3>
+                                    </div>
+
+                                </div>
+                                
+                            </div>
+
+                            <div class="row-start-2 row-span-1 grid w-full px-8">
+                                <div class="flex justify-center items-center">
+                                    <input type="text" class="w-full p-2 bg-opacity-0 border-b-2 border-custom-violet-300 text-5xl text-custom-violet-300" id="inputAmount" placeholder="₱ 0.00">                           
+                                </div>
+                                <div style="visibility:hidden;" id="message"></div>
+                            </div>
+
+                            <div class="row-start-3 row-span-2  ">
+                                <div class="px-6 space-y-6 mt-6 h-full text-custom-violet-300">
+                                    <div class="flex justify-around ">
+                                        <button class="w-20 py-2 shadow-custom-outline rounded-lg hover-Button" id="dBtn20" value="20">20</button>
+                                        <button class="w-20 py-2 shadow-custom-outline rounded-lg hover-Button" id="dBtn40" value="40">40</button>
+                                        <button class="w-20 py-2 shadow-custom-outline rounded-lg hover-Button"  id="dBtn50" value="50">50</button>
+                                    </div>
+
+                                    <div class="flex justify-around">
+                                        <button class="w-20 py-2 shadow-custom-outline rounded-lg hover-Button" id="dBtn100" value="100">100</button>
+                                        <button class="w-20 py-2 shadow-custom-outline rounded-lg hover-Button" id="dBtn150" value="150">150</button>
+                                        <button class="w-20 py-2 shadow-custom-outline rounded-lg hover-Button" id="dBtn200" value="200">200</button>
+                                    </div>
+
+                                    <div class="flex justify-around">
+                                        <button class="w-20 py-2 shadow-custom-outline rounded-lg hover-Button" id="dBtn250" value="250">250</button>
+                                        <button class="w-20 py-2 shadow-custom-outline rounded-lg hover-Button" id="dBtn300" value="300">300</button>
+                                        <button class="w-20 shadow-custom-outline rounded-lg flex justify-center hover:bg-slate-300 transition duration-500" id="dlt">
+                                            <img src="./assets/delete.png" alt="" class="w-10 h-10">
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="row-start-5 row-span-1 grid">
+                                <div class="flex justify-center items-center text-md font-semibold space-x-4">
+                                    <button class="w-[30%] py-2 text-custom-violet-300 shadow-custom-outline rounded-md hover:bg-custom-violet-200 hover:text-white transition duration-500 depositWithdrawBack">Back</button>
+                                    <button class="w-[50%] py-2 text-custom-violet-300 shadow-custom-outline rounded-md hover:bg-custom-violet-300 hover:text-white transition duration-500" onclick="handleTransaction('deposit')" id="depositAmountBtn">Deposit Money</button>
+                                    <button class="w-[50%] py-2 text-custom-violet-300 shadow-custom-outline rounded-md hover:bg-custom-violet-300 hover:text-white transition duration-500 hidden" onclick="handleTransaction('withdraw')" id="withdrawAmountBtn">Withdraw Money</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="h-full w-full hidden" id="successful">
+                <div class="absolute h-full w-full inset-0 flex justify-center items-center">
+                    <div class="bg-white md:w-1/3 md:shadow-custom-dark rounded-3xl md:p-6 h-auto space-y-4 ">
+                        <div class="md:text-2xl text-xl py-6 text-custom-violet-300" id="successTransaction">Successful Ttransaction</div>
+                        <div class="flex justify-end">
+                            <button class="px-8 py-2 shadow-custom-outline rounded-lg hover-Button text-custom-violet-300 depositWithdrawBack">Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        
+<!-- mobile devices -->
+    <div class="md:hidden mb-10 relative" id="smDashhboard">
+
+        <div class="w-full flex justify-end"  id="navigation_sm">
+            <div>
+                <button id="menu_button">
+                    <img src="./assets/menu.png" alt="menu" class="w-10 h-10 ">
+                </button>
+            </div>
+
+            <div class="hidden" id="menuSm_content">
+                <div class="flex gap-3 justify-center items-center">
+                    <button class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shadow-custom-outline" id="smAccountButton">
+                        <img src="./assets/user1.png" alt="User Profile" class="w-8 h-8 rounded-full" id="userProfileSm">
+                    </button>
+
+                    <button id="smLogoutButton">
+                        <img src="./assets/log-out-sm.png" alt="Log out" class="w-6 h-6">
+                    </button>
+
+                    
+                </div>
+            </div>
+        </div>
+        
+        <div class="space-y-6">
+
+
+            
+            <!-- greet -->
+            <div>
+                <h2 class="text-custom-violet-300 font-medium text-2xl">
+                    Good Day,
+                    <span class="font-bold userFirstname"></span>!
+                </h2>
+                <p class="text-custom-violet-200">
+                    Have a nice
+                    <span class="currentDay"></span>
+                </p>
+            </div>
+
+            <!-- total amount -->
+            <div class="p-4 bg-custom-violet-300 relative rounded-md text-white h-20">
+                <h3 class="absolute top-2 font-semibold">Total Amount</h3>
+                <h1 class="absolute right-4 bottom-2 text-4xl font-bold totalBalance">
+                       
+                </h1>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+
+                <!-- deposit button -->
+                <div class="col-span-1 p-2 shadow-custom-dark-sm rounded-lg text-custom-violet-300 font-semibold hover:bg-custom-violet-300 hover:text-white transition duration-500 border border-t-0 border-custom-violet-300 border-l-0 hover:border-white hover:border-t hover:border-l depositBtn">
+                    <div class="">
+                        <h4 class="text-center">Deposit</h4>
+                    </div>
+                </div>
+
+                <!-- withdraw button -->
+                <div class="col-start-2 p-2 shadow-custom-dark-sm rounded-lg text-custom-violet-300 font-semibold hover:bg-custom-violet-300 hover:text-white transition duration-500  border border-t-0 border-l-0 border-custom-violet-300 hover:border-white hover:border-t hover:border-l withdrawBtn">
+                    <div>
+                        <h4 class="text-center">Withdraw</h4>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- monthly total-sm -->
+        <div class="min-h-60 mt-10 rounded-lg shadow-custom-dark-sm">
+            <div class="bg-custom-violet-300 w-full rounded-lg p-2">
+                <h3 class="text-white text-center font-bold">Monthly Total</h3>
+            </div>
+
+            <div class="p-2 text-center text-custom-violet-1000">
+                <table class="w-full monthlyTotalTable">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="h-80 mt-10 rounded-lg shadow-custom-dark-sm grid grid-rows-5">
+            <div class=" row-start-1 row-span-1">
+                <div class="bg-custom-violet-300 w-full rounded-lg p-2">
+                    <h3 class="text-white text-center font-bold">Transaction History</h3>
+                </div>
+            </div>
+
+            <div class="row-start-2 row-span-4 pb-4 text-center text-custom-violet-1000 h-full overflow-y-auto">
+                <table class="w-full transactionTable">
+                    <thead class="sticky top-0 z-10 bg-white">
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Action</th>
+                        <th>Amount</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- sm User Information -->
+        
+
+    </div>
+
+    <div class="hidden absolute inset-0 h-full w-full p-6 z-50" id="smUserInfo">
+            <div class="h-full w-full">
+                <div class=" bg-white border-4 h-full w-full grid grid-rows-7 shadow-custom-dark-sm rounded-2xl">
+
+                    <div class="row-start-1 row-span-2 flex justify-center h-full">
+                        <button class="w-32 h-32  bg-gray-200 flex items-center  justify-center shadow-custom-outline rounded-full mt-10">
+                            <label for="profileUploadMobile" class="flex items-center justify-center w-full h-full cursor-pointer">
+                                <img src="./assets/user1.png" alt="User Profile" class="w-32 h-32 rounded-full" id="profile-image-mobile">
+                                <input type="file" id="profileUploadMobile" accept="image/*" style="display: none;">
+                            </label>
+                        </button>
+                    </div>
+
+                    <form class="userInfoInput">
+                        <div class="h-full row-start-3 row-span-5  w-full">
+                                <div class="md:flex">
+                                    
+                                    <div class="px-6 md:w-1/2">
+                                        <label for="firstName" class="m-2 text-lg font-semibold text-custom-violet-900 block">First Name</label>
+                                        <input type="text" value="" class="border-2 border-custom-violet-300 rounded-lg p-1 w-full firstNameInput" id="smFirstNameInput">
+                                    </div>
+                                    
+                                    <div class="px-6 md:w-1/2">
+                                        <label for="lastName" class="m-2 text-lg font-medium text-custom-violet-900 block ">Last Name</label>
+                                        <input type="text"class="border-2 border-custom-violet-300 rounded-lg p-1 w-full lastNameInput" id="smLastNameInput">
+                                    </div>
+                                    
+                                </div>
+
+                                <div class="flex justify-evenly p-6">
+                                    <div class="flex">
+                                        <input type="checkbox" class="border-2 border-custom-violet-300 rounded-sm w-6 studentInput" id="smStudentInput">
+                                        <label for="smStudentInput" class="m-2 text-lg font-semibold text-custom-violet-900 block ">Student</label>
+                                    </div>
+                                    
+                                    <div class="flex">
+                                        <input type="text" class="border-2 border-custom-violet-300 rounded-lg p-1 w-full positionInput" id="smPositionInput">
+                                    </div>
+                                </div>
+
+                                <div class="px-6">
+                                    <label for="email" class="m-2 text-lg font-semibold text-custom-violet-900 block">Email Address</label>
+                                    <input type="text" class="border-2 border-custom-violet-300 rounded-lg p-1 w-full emailInput" id="smEmailInput">
+                                </div>
+
+                                <div class="grid grid-rows-4 w-full px-8">
+                                    <div class="row-start-3 row-span-1 grid grid-col-2 gap-4">
+                                        <button class="col-start-1 col-span-1 border border-custom-violet-300 px-5 py-1 rounded-xl text-xl font-semibold text-custom-violet-300 hover:bg-custom-violet-300 hover:text-white transition duration-500" id="smUserInfoBack">Back</button>
+                                        <button class="col-start-2 border border-custom-violet-300 px-5 py-1 rounded-xl text-xl font-semibold text-custom-violet-300 hover:bg-custom-violet-300 hover:text-white transition duration-500 userInfoSave" id="smSaveButton">Save</button>
+                                    </div>
+                                </div>
+
+                                
+                        </div>
+                    </form>
+                </div>
+
+
+                
+            </div>
+        </div>
+
+ 
+    <div class="hidden md:hidden"  id="logoutPop">
+        <div class="absolute inset-0 h-full w-full grid grid-rows-4">
+            <div class=" flex justify-center items-center row-start-2 row-span-2">
+                <div class="w-72 h-52 bg-white border-2 space-y-6 grid grid-rows-3 border-custom-violet-300 rounded-lg shadow-custom-dark-sm">
+                    <div class="h-full row-start-2 space-y-8">
+                        <h2 class="text-center text-2xl font-bold text-custom-violet-300 flex items-center justify-center">Log out?</h2>
+                        <div class="flex justify-evenly">
+                            <button class="border border-custom-violet-300 px-5 py-1 rounded-xl text-xl font-semibold text-custom-violet-300 hover:bg-custom-violet-300 hover:text-white transition duration-500" id="smLogOutYes">Yes</button>
+                            <button class="border border-custom-violet-300 px-5 py-1 rounded-xl text-xl font-semibold text-custom-violet-300 hover:bg-custom-violet-300 hover:text-white transition duration-500" id="smLogOutNo">No</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crop Modal -->
+    <div class="hidden absolute w-full h-full inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6" id="cropModal">
+    <div class="bg-white p-6 w-fit md:h-full rounded-2xl shadow-custom-dark relative md:p-12">
+        <h3 class="text-xl font-bold text-custom-violet-300 mb-4 text-center">Crop Your Profile Picture</h3>
+        <div class="mb-4 md:h-[85%] md:w-[30%] pb-6">
+            <img id="cropImage" class="w-auto h-auto" alt="Image to crop">
+        </div>
+        <div class="flex justify-between space-x-4 ">
+            <button class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400" id="cropCancel">Cancel</button>
+            <button class="flex-1 bg-custom-violet-300 text-white px-4 py-2 hover:bg-custom-violet-400 rounded-md" id="cropConfirm">Crop & Upload</button>
+        </div>
+    </div>
+</div>
+    
+    
+
+
+    <script>
+// =================== Current Date =====================
+
+function updateClock() {
+    const now = new Date();
+    
+    // ... (define options as above) ...
+    const dateOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+    const timeOptions = { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true };
+    const dayOptions = { weekday: 'long' };
+
+    const formattedDate = now.toLocaleDateString('en-US', dateOptions);
+    const formattedTime = now.toLocaleTimeString('en-US', timeOptions);
+    const currentDay = now.toLocaleDateString('en-US', dayOptions);
+
+    const currentDateElement = document.querySelectorAll('.currentDate');
+    const currentTimeElement = document.querySelectorAll('.currentTime');
+    const currentDayElement = document.querySelectorAll('.currentDay');
+
+    if (currentDateElement) {
+        currentDateElement.forEach(element => {
+            element.innerHTML = formattedDate;
+        })
+        
+    }
+    if (currentTimeElement) {
+        currentTimeElement.forEach(element => {
+            element.innerHTML = formattedTime;
+        })
+        
+    }
+    if (currentDayElement) {
+        currentDayElement.forEach(element => {
+            element.innerHTML = currentDay;
+        })
+        
+        
+    }
+    console.log(currentDay);
+}
+
+// 1. Call the function once immediately
+updateClock();
+
+// 2. Call the function every 1000 milliseconds (1 second)
+setInterval(updateClock, 1000);
+
+
+//======================= My profile Section || Log out===========================
+        const menuButton = document.querySelector('#menu_button');
+        const menuContent = document.querySelector('#menuSm_content');
+        const navigation_sm = document.querySelector('#navigation_sm');
+
+        menuButton.addEventListener("click", () => {
+            menuContent.classList.toggle('hidden');
+            navigation_sm.classList.toggle('justify-between')
+        })
+
+        const logoutButton = document.querySelector('#logoutButton');
+        const accountSection = document.querySelector('#accountSection');
+        const logoutsection = document.querySelector('#logoutSection');
+        const logOutYes = document.querySelector('#logOutYes');
+        const logOutNo = document.querySelector('#logOutNo');
+
+        logoutButton.addEventListener("click", () => {
+            accountSection.classList.add('hidden');
+            logoutsection.classList.remove('hidden')
+        })
+
+        logOutYes.addEventListener("click", () => {
+            window.location.href = './login.html';  
+        })
+
+        logOutNo.addEventListener("click", () => {
+            accountSection.classList.remove('hidden');
+            logoutsection.classList.add('hidden')
+        })
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==========================================================================
+
+// ===================== My profile Section || User Information =====================================
+        const userInfo = document.querySelector('#userInfo');
+        const dashboardSection = document.querySelector('#dashboardSection');
+        const userButton = document.querySelector('#userButton');
+
+        userButton.addEventListener("click", () => {
+            userInfo.classList.remove('hidden');
+            dashboardSection.classList.add('blur-sm');
+            
+        })
+
+        const userInfoBack = document.querySelector('#userInfoBack');
+
+        userInfoBack.addEventListener("click", () => {
+            userInfo.classList.add('hidden');
+            dashboardSection.classList.remove('blur-sm');
+
+
+        })
+
+
+// =============== Mobile ||  Menu Section || Log Out ================================
+        const smLogoutButton = document.querySelector('#smLogoutButton');
+        const logoutPop = document.querySelector('#logoutPop');
+        const smDashhboard = document.querySelector('#smDashhboard');
+
+        smLogoutButton.addEventListener("click", () => {
+            logoutPop.classList.remove('hidden');
+            smDashhboard.classList.add('blur-sm')
+        })
+        
+        smLogOutYes.addEventListener("click", () => {
+            window.location.href = './login.html';  
+        })
+
+        smLogOutNo.addEventListener("click", () => {
+            smDashhboard.classList.remove('blur-sm')
+            logoutPop.classList.add('hidden');
+        })
+
+        // ========== Mobile User Information ============
+        const smAccountButton = document.querySelector('#smAccountButton');
+        const smUserInfo = document.querySelector('#smUserInfo');
+        const smUserInfoBack =  document.querySelector('#smUserInfoBack');
+        const smUserInfoSave =  document.querySelector('#smUserInfoSave');
+        const body = document.body;
+
+        smAccountButton.addEventListener('click', () => {
+            body.classList.add('bg-custom-violet-300');
+            menuContent.classList.add('hidden');
+            smUserInfo.classList.remove('hidden');
+
+
+        })
+
+        smUserInfoBack.addEventListener('click', () => {
+            smUserInfo.classList.add('hidden');
+            body.classList.remove('bg-custom-violet-300');
+            menuContent.classList.remove('hidden');
+        })
+
+
+    </script>
+
+    <script src="./index.js"></script>
+    <script src="./cropper.min.js"></script>
+
+</body>
+</html>

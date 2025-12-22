@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.font-semibold {
+    font-weight: 600;
+}
+
+.text-color1C {
+    color: #1C027D;
+}
+
+.text-colorAF {
+    color: AF85F1;
+}
+
+.text-color4C {
+    color: 4C1C96;
+}
+
+.text-colorDE {
+    color: #DEBCFE
+}
+
+
+.text-shadow {
+    text-shadow: 2px 2px 2px black;
+}
+
+.text-shadow-lg {
+    text-shadow: 6px 6px 10px black;
+}
+
+tr:nth-child(even) {
+  background-color: #AF85F1;
+  color: white;
+}
+
+.aspect-square {
+  aspect-ratio: 2 / 2;
+}
+
+.hover-Button:hover {
+    background-color: #5617D4;
+    color: white;
+    transition: background-color 500ms, color 500ms;
+}

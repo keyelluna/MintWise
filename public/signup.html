@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MintWise - SignUp</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="h-screen overflow-y-auto md:overflow-hidden">
+    <div class="grid grid-cols-1 md:grid-cols-5">
+       
+
+        <!-- Left Section -->
+        <div class="col-span-1 md:col-span-2 flex bg-gradient-to-br from-purple-500 to-purple-900 shadow-xl rounded-rt-[3rem] md:rounded-r-[5rem] h-screen">
+
+            <div class="w-full flex items-center">
+            <div class="w-full p-8 md:p-12">
+                <h1 class="text-3xl md:text-6xl font-extrabold text-white mb-8">
+                    Personal Information
+                </h1>
+
+                <form id="signupForm" class="space-y-6">
+                    <div class="md:flex gap-4">
+                        <div class="flex-1">
+                            <label for="fname" class="block text-white text-lg font-medium mb-2">First Name</label>
+                            <input id="fname" type="text" placeholder="Enter your first name" required
+                                class="p-4 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-md transition duration-300 w-full">
+                        </div>
+                        <div class="flex-1">
+                            <label for="lname" class="block text-white text-lg font-medium mb-2">Last Name</label>
+                            <input id="lname" type="text" placeholder="Enter your last name" required
+                                class=" p-4 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-md transition duration-300 w-full">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4">
+                                <input id="student" type="checkbox" onclick="handleCheckBoxClick(this)"
+                                    class="w-5 h-5 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent">
+                                <label for="student" class="text-white text-lg font-medium">Student</label>
+                            </div>
+                        </div>
+
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4">
+                                <input id="working" type="checkbox" onclick="handleCheckBoxClick(this)"
+                                    class="w-5 h-5 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent">
+                                <label for="working" class="text-white text-lg font-medium">Working</label>
+                            </div>
+                            <input type="text" placeholder="Enter your position" style="display:none" class=" p-4 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-md transition duration-300 w-full mt-6" id="workingPositionmd">
+                        </div>
+
+                    </div>
+                    <input type="text" placeholder="Enter your position" style="display: none;" class="p-4 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-md transition duration-300 w-full mt-6" id="workingPositionsm">
+
+                    <div>
+                        <label for="email" class="block text-white text-lg font-medium mb-2">Email Address</label>
+                        <input id="email" type="email" placeholder="Enter your email address"
+                            class="w-full p-4 rounded-lg bg-white text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-md transition duration-300">
+                    </div>
+
+                   <div class="md:flex gap-4">
+                        <div class="flex-1">
+                            <label for="pass" class="block text-white text-lg font-medium mb-2">Password</label>
+                            <input id="password" type="password" placeholder="Enter your password"
+                                class="p-4 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-md transition duration-300 w-full">
+                        </div>
+                        <div class="flex-1">
+                            <label for="confirmPass" class="block text-white text-lg font-medium mb-2">Confirm Password</label>
+                            <input id="confirmPass" type="password" placeholder="Confirm password"
+                                class=" p-4 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-md transition duration-300 w-full">
+                        </div>
+                    </div>
+
+
+                    <div class="flex flex-col sm:flex-row gap-4 m-5">
+                        <button type="submit" class="bg-white text-purple-700 font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-purple-50 hover:shadow-lg transition duration-300 flex-1">
+                            Sign Up
+                        </button>
+                        
+                    </div>
+                </form>
+
+            </div>
+            </div>
+        </div>
+
+         <!-- Right Section -->
+        <div class="hidden md:flex md:col-span-3 flex-col p-8 h-full w-full">
+            <div class="grid grid-rows-5 h-full w-full">
+                <div class="flex row-span-1 h-full w-full">
+                    <img src="./assets/logo.webp" alt="MintWise Logo" class="w-12 h-12 mr-3">
+                    <h1 class="text-3xl font-bold text-purple-700">MintWise</h1>
+                </div>
+                
+                <div class="row-start-2 row-span-4 h-full mb-4 w-full flex justify-center">
+                    <img src="./assets/Cover.png" alt="MintWise Cover" class="w-[80%] h-auto max-w-full">
+                </div>
+            
+            </div>
+        </div>
+    </div>
+
+    <script src="./index.js"></script>
+
+</body>
+</html>

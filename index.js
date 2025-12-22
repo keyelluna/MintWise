@@ -52,59 +52,16 @@ app.use(session({
     cookie: { secure: false } // Set to true if using https
 }));
 
-// Database connection
-const db = mysql.createConnection({
+// Database connection pool for serverless
+const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+    database: process.env.DB_NAME,
+    connectionLimit: 10,
+    acquireTimeout: 60000,
+    timeout: 60000
 }).promise();
-
-(async () => {
-    try {
-        await db.connect();
-        console.log('Connected to MySQL database');
-
-        // Create database and table if not exists
-        await db.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\``);
-        await db.query(`USE \`${process.env.DB_NAME}\``);
-        const createTableQuery = `
-            CREATE TABLE IF NOT EXISTS users (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                first_name VARCHAR(255) NOT NULL,
-                last_name VARCHAR(255) NOT NULL,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                password VARCHAR(255) NOT NULL,
-                is_student BOOLEAN DEFAULT FALSE,
-                position VARCHAR(255),
-                profile_pic_url VARCHAR(255) DEFAULT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `;
-        await db.query(createTableQuery);
-        console.log('Users table ready');
-
-        const createTransactionTableQuery = `
-            CREATE TABLE IF NOT EXISTS deposit_and_withdraw (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
-                transaction_type ENUM('deposit', 'withdraw') NOT NULL,
-                amount DECIMAL(10, 2) NOT NULL,
-                transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                
-                -- Foreign Key Constraint
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            )
-        `;
-        await db.query(createTransactionTableQuery);
-        console.log('Deposit and Withdraw table ready');
-
-
-    } catch (err) {
-        console.error('Database setup error:', err);
-        process.exit(1); // Exit if database setup fails
-    }
-})();
 
 // Routes
 

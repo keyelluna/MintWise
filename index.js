@@ -1,5 +1,5 @@
 const express = require('express');
-const mysql = require('mysql2');
+const { Pool } = require('pg');
 const session = require('express-session');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -9,12 +9,18 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const bodyParser = require('body-parser');
 
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-
+const db = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false // Required for Supabase/Vercel
+    }
+});
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -53,15 +59,15 @@ app.use(session({
 }));
 
 // Database connection pool for serverless
-const db = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    connectionLimit: 10,
-    acquireTimeout: 60000,
-    timeout: 60000
-}).promise();
+// const db = mysql.createPool({
+//     host: process.env.DB_HOST,
+//     user: process.env.DB_USER,
+//     password: process.env.DB_PASSWORD,
+//     database: process.env.DB_NAME,
+//     connectionLimit: 10,
+//     acquireTimeout: 60000,
+//     timeout: 60000
+// }).promise();
 
 // Routes
 
@@ -77,8 +83,8 @@ app.post('/signup', async (req, res) => {
         return res.status(500).json({ message: 'Internal server error during processing.' });
     }
 
-    const query = 'INSERT INTO users (first_name, last_name, email, password, is_student, position) VALUES (?, ?, ?, ?, ?, ?)';
-    const selectQuery = 'SELECT id, first_name, last_name, email, is_student, position FROM users WHERE email = ?'; // Select all needed columns, excluding password
+    const query = 'INSERT INTO users (first_name, last_name, email, password, is_student, position) VALUES ($1, $2, $3, $4, $5, $6)';
+    const selectQuery = 'SELECT id, first_name, last_name, email, is_student, position FROM users WHERE email = $1'; // Select all needed columns, excluding password
 
 
    try {
@@ -107,7 +113,7 @@ app.post('/signup', async (req, res) => {
         console.error('Signup Database Error:', err); 
 
         // Handle the specific Duplicate Entry error using the error code
-        if (err.code === 'ER_DUP_ENTRY') {
+        if (err.code === '23505') {
             // Return 409 Conflict, or 400 Bad Request if preferred. 
             // 409 is semantically better for constraint violation.
             return res.status(409).json({ message: 'Email already exists. Please login or use a different email.' });
@@ -120,7 +126,7 @@ app.post('/signup', async (req, res) => {
 
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
-    const selectQuery = 'SELECT * FROM users WHERE email = ?';
+    const selectQuery = 'SELECT * FROM users WHERE email = $1';
 
     try {
         // Use the selectQuery to fetch the user record (including the hashed password)
@@ -179,7 +185,7 @@ app.post('/api/transaction', async (req, res) => {
                     COALESCE(SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END), 0) -
                     COALESCE(SUM(CASE WHEN transaction_type = 'withdraw' THEN amount ELSE 0 END), 0) AS balance
                 FROM deposit_and_withdraw
-                WHERE user_id = ?
+                WHERE user_id = $1
             `;
             const [balanceResult] = await db.query(balanceQuery, [userId]);
             const currentBalance = parseFloat(balanceResult[0].balance);
@@ -189,7 +195,7 @@ app.post('/api/transaction', async (req, res) => {
             }
         }
 
-        const query = `INSERT INTO deposit_and_withdraw (user_id, transaction_type, amount) VALUES (?, ?, ?)`;
+        const query = `INSERT INTO deposit_and_withdraw (user_id, transaction_type, amount) VALUES ($1, $2, $3)`;
         const values = [userId, transactionType, numericAmount];
 
         const [result] = await db.query(query, values);
@@ -225,7 +231,7 @@ app.get('/api/user-fullInfo', async (req, res) => {
     }
 
     const userId = req.session.user_id;
-    const sqlGetFullname = "SELECT first_name, last_name, mobile_number, email, is_student, position, profile_pic_url FROM users WHERE id = ?";
+    const sqlGetFullname = "SELECT first_name, last_name, mobile_number, email, is_student, position, profile_pic_url FROM users WHERE id = $1";
 
     try {
         const [userResult] = await db.query(sqlGetFullname, [userId]);
@@ -254,8 +260,8 @@ app.put('/api/update-profile', async (req, res) => {
 
     const updateQuery = `
         UPDATE users
-        SET first_name = ?, last_name = ?, email = ?, position = ?, is_student = ?
-        WHERE id = ?
+        SET first_name = $1, last_name = $2, email = $3, position = $4, is_student = $5
+        WHERE id = $6
     `;
 
     try {
@@ -272,7 +278,7 @@ app.put('/api/update-profile', async (req, res) => {
             return res.status(404).json({ message: 'User not found or no changes made.' });
         }
 
-        const [updatedUser] = await db.query('SELECT id, first_name, last_name, email, is_student, position FROM users WHERE id = ?', [userId]);
+        const [updatedUser] = await db.query('SELECT id, first_name, last_name, email, is_student, position FROM users WHERE id = $1', [userId]);
 
         res.json({ 
             message: 'Profile updated successfully!', 
@@ -297,7 +303,7 @@ app.post('/api/upload-profile-pic', upload.single('profilePicture'), async (req,
 
     const profilePicPath = `/assets/profiles/${req.file.filename}`;
 
-    const updateQuery = 'UPDATE users SET profile_pic_url = ? WHERE id = ?';
+    const updateQuery = 'UPDATE users SET profile_pic_url = $1 WHERE id = $2';
 
     try {
         await db.query(updateQuery, [profilePicPath, userId]);

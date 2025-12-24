@@ -58,17 +58,6 @@ app.use(session({
     cookie: { secure: false } // Set to true if using https
 }));
 
-// Database connection pool for serverless
-// const db = mysql.createPool({
-//     host: process.env.DB_HOST,
-//     user: process.env.DB_USER,
-//     password: process.env.DB_PASSWORD,
-//     database: process.env.DB_NAME,
-//     connectionLimit: 10,
-//     acquireTimeout: 60000,
-//     timeout: 60000
-// }).promise();
-
 // Routes
 
 
@@ -91,14 +80,14 @@ app.post('/signup', async (req, res) => {
         // Use await with the promise-based db.query
         await db.query(query, [firstName, lastName, email, hashedPassword, isStudent, position]);
 
-        const [results] = await db.query(selectQuery, [email]);
+        const results = await db.query(selectQuery, [email]);
 
-        if (results.length === 0) {
+        if (results.rows.length === 0) {
              // This case should theoretically not happen right after a successful insert
              return res.status(500).json({ message: 'User created but could not be retrieved.' });
         }
 
-        const user = results[0];
+        const user = results.rows[0];
         
         // Success response
         req.session.user_id = user.id;
@@ -130,14 +119,14 @@ app.post('/login', async (req, res) => {
 
     try {
         // Use the selectQuery to fetch the user record (including the hashed password)
-        const [results] = await db.query(selectQuery, [email]);
+        const results = await db.query(selectQuery, [email]);
 
         // Check if a user with that email exists
-        if (results.length === 0) {
+        if (results.rows.length === 0) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
         
-        const user = results[0];
+        const user = results.rows[0];
 
         // 2. Use bcrypt.compare() to verify the plaintext password against the hash
         const isMatch = await bcrypt.compare(password, user.password);
@@ -187,25 +176,25 @@ app.post('/api/transaction', async (req, res) => {
                 FROM deposit_and_withdraw
                 WHERE user_id = $1
             `;
-            const [balanceResult] = await db.query(balanceQuery, [userId]);
-            const currentBalance = parseFloat(balanceResult[0].balance);
+            const balanceResult = await db.query(balanceQuery, [userId]);
+            const currentBalance = parseFloat(balanceResult.rows[0].balance);
 
             if (currentBalance <= 0 || currentBalance < numericAmount) {
                 return res.status(400).json({ error: 'Insufficient funds. Cannot withdraw.' });
             }
         }
 
-        const query = `INSERT INTO deposit_and_withdraw (user_id, transaction_type, amount) VALUES ($1, $2, $3)`;
+        const query = `INSERT INTO deposit_and_withdraw (user_id, transaction_type, amount) VALUES ($1, $2, $3) RETURNING id`;
         const values = [userId, transactionType, numericAmount];
 
-        const [result] = await db.query(query, values);
+        const result = await db.query(query, values);
 
-        if (result && result.affectedRows === 1) {
+        if (result && result.rowCount === 1) {
             console.log(`Transaction successful: ${transactionType} of ${numericAmount} for User ${userId}.`);
             // Respond to the client with success message and the new transaction ID
             res.status(201).json({
                 message: 'Transaction recorded successfully.',
-                transactionId: result.insertId,
+                transactionId: result.rows[0].id,
                 data: { userId, transactionType, amount: numericAmount }
             });
         } else {
@@ -217,7 +206,7 @@ app.post('/api/transaction', async (req, res) => {
         console.error('Database insertion error:', error);
 
         // Handle specific foreign key constraint error (user does not exist)
-        if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+        if (error.code === '23503') {
             return res.status(404).json({ error: `User with ID ${userId} not found.` });
         }
         res.status(500).json({ error: 'Database error occurred.' });
@@ -234,14 +223,14 @@ app.get('/api/user-fullInfo', async (req, res) => {
     const sqlGetFullname = "SELECT first_name, last_name, mobile_number, email, is_student, position, profile_pic_url FROM users WHERE id = $1";
 
     try {
-        const [userResult] = await db.query(sqlGetFullname, [userId]);
+        const userResult = await db.query(sqlGetFullname, [userId]);
 
 
-        if (userResult.length === 0){
+        if (userResult.rows.length === 0){
             return res.status(404).json({ error: 'User not found' });
         }
 
-        res.json({ user: userResult[0] });
+        res.json({ user: userResult.rows[0] });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to retrieve data' });
@@ -265,7 +254,7 @@ app.put('/api/update-profile', async (req, res) => {
     `;
 
     try {
-        const [result] = await db.query(updateQuery, [
+        const result = await db.query(updateQuery, [
             first_name, 
             last_name, 
             email,  
@@ -274,15 +263,15 @@ app.put('/api/update-profile', async (req, res) => {
             userId   
         ]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({ message: 'User not found or no changes made.' });
         }
 
-        const [updatedUser] = await db.query('SELECT id, first_name, last_name, email, is_student, position FROM users WHERE id = $1', [userId]);
+        const updatedUser = await db.query('SELECT id, first_name, last_name, email, is_student, position FROM users WHERE id = $1', [userId]);
 
         res.json({ 
             message: 'Profile updated successfully!', 
-            user: updatedUser[0] 
+            user: updatedUser.rows[0] 
         });
     } catch (err) {
         console.error('Update Error:', err);
@@ -313,7 +302,7 @@ app.post('/api/upload-profile-pic', upload.single('profilePicture'), async (req,
             profile_pic_url: profilePicPath
         });
     } catch (err) {
-        console.error('Propile Picture Upload Error', err)
+        console.error('Profile Picture Upload Error', err)
 
         res.status(500).json({ message: 'Failed to save profile picture.' });
     }
@@ -325,14 +314,14 @@ app.get('/api/transactions', async (req, res) => {
     }
 
     const user_id = req.session.user_id;
-    const sqlGetTransactionHistory = "SELECT transaction_date, transaction_type, amount FROM deposit_and_withdraw WHERE user_id = ? ORDER BY transaction_date DESC";
-    const sqlGetMonthlyAmount = "SELECT DATE_FORMAT(transaction_date, '%Y-%m') AS month_period, SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END) - SUM(CASE WHEN transaction_type = 'withdraw' THEN amount ELSE 0 END) AS monthly_balance FROM deposit_and_withdraw WHERE user_id = ? GROUP BY month_period ORDER BY month_period DESC"
+    const sqlGetTransactionHistory = "SELECT transaction_date, transaction_type, amount FROM deposit_and_withdraw WHERE user_id = $1 ORDER BY transaction_date DESC";
+    const sqlGetMonthlyAmount = "SELECT TO_CHAR(transaction_date, 'YYYY-MM') AS month_period, SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END) - SUM(CASE WHEN transaction_type = 'withdraw' THEN amount ELSE 0 END) AS monthly_balance FROM deposit_and_withdraw WHERE user_id = $1 GROUP BY month_period ORDER BY month_period DESC"
 
     try {
-        const [transactionHistory] = await db.query(sqlGetTransactionHistory, [user_id]);
+        const transactionHistory = await db.query(sqlGetTransactionHistory, [user_id]);
 
         // Format the response to include date, time, action, amount
-        const formattedTransactions = transactionHistory.map(transaction => {
+        const formattedTransactions = transactionHistory.rows.map(transaction => {
             const date = new Date(transaction.transaction_date);
             const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             const formattedTime = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
@@ -344,9 +333,9 @@ app.get('/api/transactions', async (req, res) => {
             };
         });
 
-        const [monthlyTotals] = await db.query(sqlGetMonthlyAmount, [user_id]);
+        const monthlyTotals = await db.query(sqlGetMonthlyAmount, [user_id]);
 
-        const formattedMonthly = monthlyTotals.map(month => {
+        const formattedMonthly = monthlyTotals.rows.map(month => {
             const [year, monthNum] = month.month_period.split('-');
             const date = new Date(year, monthNum - 1);
             const formattedMonth = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -366,16 +355,6 @@ app.get('/api/transactions', async (req, res) => {
     }
 });
 
-// app.get('/api/monthly', async (req, res) => {
-//     if (!req.session.user_id) {
-//         return res.status(401).json({ error: 'Not logged in' });
-//     }
-
-//     const user_id = req.session.user_id;
-//     const sqlMonthlyTotal = SELECT
-
-// })
-
 app.get('/api/balance/:userId', async (req, res) => {
     const { userId } = req.params;
     const sql = `
@@ -383,11 +362,11 @@ app.get('/api/balance/:userId', async (req, res) => {
         SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END) -
         SUM(CASE WHEN transaction_type = 'withdraw' THEN amount ELSE 0 END)
     ) AS balance
-    FROM deposit_and_withdraw WHERE user_id = ?`
+    FROM deposit_and_withdraw WHERE user_id = $1`
 
     try {
-        const [rows] = await db.query(sql, [userId]);
-        const currentBalance = rows[0].balance || 0;
+        const rows = await db.query(sql, [userId]);
+        const currentBalance = rows.rows[0].balance || 0;
 
         res.status(200).json({
             success: true,

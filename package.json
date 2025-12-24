@@ -4,11 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx tailwindcss -i ./src/input.css -o ./public/style.css",
-    "start": "nodemon index.js",
-    "dev": "npm run build && npm run start"
-  },
+  "build": "tailwindcss -i ./src/input.css -o ./public/style.css",
+  "start": "node index.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",

@@ -373,7 +373,7 @@ app.get('/api/transactions', async (req, res) => {
 
 //     const user_id = req.session.user_id;
 //     const sqlMonthlyTotal = SELECT
-
+// ?
 // })
 
 app.get('/api/balance/:userId', async (req, res) => {
@@ -383,7 +383,7 @@ app.get('/api/balance/:userId', async (req, res) => {
         SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END) -
         SUM(CASE WHEN transaction_type = 'withdraw' THEN amount ELSE 0 END)
     ) AS balance
-    FROM deposit_and_withdraw WHERE user_id = ?`
+    FROM deposit_and_withdraw WHERE user_id = $1`
 
     try {
         const [rows] = await db.query(sql, [userId]);

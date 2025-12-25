@@ -1,6 +1,6 @@
 const express = require('express');
 const { Pool } = require('pg');
-const session = require('express-session');
+// const session = require('express-session');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');

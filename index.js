@@ -9,6 +9,9 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const bodyParser = require('body-parser');
 
+const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
+
 
 dotenv.config();
 
@@ -51,11 +54,27 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// app.use(session({
+//     secret: 'your_secret_key', // Change this to a random string
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: { secure: false } // Set to true if using https
+// }));
+
 app.use(session({
-    secret: 'your_secret_key', // Change this to a random string
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false } // Set to true if using https
+  store: new pgSession({
+    conString: process.env.DATABASE_URL, // Use your Supabase connection string
+    tableName: 'session',                // The table we just created
+    createTableIfMissing: false          // Set to false since we created it manually
+  }),
+  secret: process.env.SESSION_SECRET,    // Ensure this is in your Vercel Env Vars
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    maxAge: 30 * 24 * 60 * 60 * 1000,    // 30 days
+    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+    sameSite: 'lax'
+  }
 }));
 
 // Database connection pool for serverless

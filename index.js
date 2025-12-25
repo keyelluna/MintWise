@@ -63,17 +63,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
   store: new pgSession({
-    conString: process.env.DATABASE_URL, // Use your Supabase connection string
-    tableName: 'session',                // The table we just created
-    createTableIfMissing: false          // Set to false since we created it manually
+    conString: process.env.DATABASE_URL, // Your Supabase connection string
+    tableName: 'session'                 // The table name created in Step 1
   }),
-  secret: process.env.SESSION_SECRET,    // Ensure this is in your Vercel Env Vars
+  secret: process.env.SESSION_SECRET,    // A secret key from your environment variables
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    maxAge: 30 * 24 * 60 * 60 * 1000,    // 30 days
-    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-    sameSite: 'lax'
+    maxAge: 30 * 24 * 60 * 60 * 1000,    // 30 days in milliseconds
+    secure: process.env.NODE_ENV === 'production' // Only send over HTTPS in production
   }
 }));
 

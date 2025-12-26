@@ -1,6 +1,5 @@
 const express = require('express');
 const { Pool } = require('pg');
-// const session = require('express-session');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
@@ -8,10 +7,8 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const bodyParser = require('body-parser');
-
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
-
 
 dotenv.config();
 
@@ -22,9 +19,40 @@ const PORT = process.env.PORT || 3000;
 const db = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Required for Supabase/Vercel
+        rejectUnauthorized: false
     }
 });
+
+// CORS Configuration - MUST come before session
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Add your Vercel frontend URL
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Middleware
+app.use(express.json());
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Session Configuration - AFTER CORS
+app.use(session({
+    store: new pgSession({
+        pool: db, // Use pool instead of conString
+        tableName: 'session'
+    }),
+    secret: process.env.SESSION_SECRET || 'your-super-secret-key-change-this-in-production',
+    resave: false,
+    saveUninitialized: false,
+    name: 'sessionId', // Custom cookie name
+    cookie: { 
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    }
+}));
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -40,7 +68,6 @@ const upload = multer({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024},
     fileFilter: (req, file, cb) => {
-
         if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'image/gif') {
             cb(null, true);
         } else {
@@ -49,54 +76,9 @@ const upload = multer({
     }
 });
 
-// Middleware
-app.use(cors({
-    origin: 'https://mint-wise-n7504b5wm-keyels-projects-6665b873.vercel.app/', // Replace with your actual frontend URL
-    credentials: true
-}));
-app.use(express.json());
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
-// app.use(session({
-//     secret: 'your_secret_key', // Change this to a random string
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: { secure: false } // Set to true if using https
-// }));
-
-app.use(session({
-  store: new pgSession({
-    conString: process.env.DATABASE_URL, // Your Supabase connection string
-    tableName: 'session'                 // The table name created in Step 1
-  }),
-  secret: process.env.SESSION_SECRET,    // A secret key from your environment variables
-  resave: false,
-  saveUninitialized: false,
-  cookie: { 
-    maxAge: 30 * 24 * 60 * 60 * 1000,    // 30 days in milliseconds
-    secure: process.env.NODE_ENV === 'production' // Only send over HTTPS in production
-    
-  }
-}));
-
-
-
-// Database connection pool for serverless
-// const db = mysql.createPool({
-//     host: process.env.DB_HOST,
-//     user: process.env.DB_USER,
-//     password: process.env.DB_PASSWORD,
-//     database: process.env.DB_NAME,
-//     connectionLimit: 10,
-//     acquireTimeout: 60000,
-//     timeout: 60000
-// }).promise();
-
 // Routes
-
-
 app.post('/signup', upload.none(), async (req, res) => {
+    console.log('Signup request received:', req.body);
     const { firstName, lastName, email, password, isStudent, position } = req.body;
 
     let hashedPassword;
@@ -108,75 +90,64 @@ app.post('/signup', upload.none(), async (req, res) => {
     }
 
     const query = 'INSERT INTO users (first_name, last_name, email, password, is_student, position) VALUES ($1, $2, $3, $4, $5, $6)';
-    const selectQuery = 'SELECT id, first_name, last_name, email, is_student, position FROM users WHERE email = $1'; // Select all needed columns, excluding password
+    const selectQuery = 'SELECT id, first_name, last_name, email, is_student, position FROM users WHERE email = $1';
 
-
-   try {
-        // Use await with the promise-based db.query
+    try {
         await db.query(query, [firstName, lastName, email, hashedPassword, isStudent, position]);
 
         const results = await db.query(selectQuery, [email]);
         const user = results.rows[0];
 
         if (results.rows.length === 0) {
-             // This case should theoretically not happen right after a successful insert
-             return res.status(500).json({ message: 'User created but could not be retrieved.' });
+            return res.status(500).json({ message: 'User created but could not be retrieved.' });
         }
 
-        
-        
-        // Success response
+        // Set session
         req.session.user_id = user.id;
-
+        
+        console.log('User created successfully, session ID:', req.session.user_id);
+        
         return res.status(201).json({ 
             message: 'User created successfully',
-            user:user 
+            user: user 
         });
         
     } catch (err) {
-        // Log the error for server-side debugging
         console.error('Signup Database Error:', err); 
 
-        // Handle the specific Duplicate Entry error using the error code
         if (err.code === '23505') {
-            // Return 409 Conflict, or 400 Bad Request if preferred. 
-            // 409 is semantically better for constraint violation.
             return res.status(409).json({ message: 'Email already exists. Please login or use a different email.' });
         }
         
-        // Handle all other internal database errors
         return res.status(500).json({ message: 'Database error occurred during sign-up.' });
     }
 });
 
 app.post('/login', async (req, res) => {
+    console.log('Login request received:', req.body);
     const { email, password } = req.body;
     const selectQuery = 'SELECT * FROM users WHERE email = $1';
 
     try {
-        // Use the selectQuery to fetch the user record (including the hashed password)
         const results = await db.query(selectQuery, [email]);
 
-        // Check if a user with that email exists
         if (results.rows.length === 0) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
         
         const user = results.rows[0];
 
-        // 2. Use bcrypt.compare() to verify the plaintext password against the hash
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            // Password does not match the stored hash
             return res.status(401).json({ message: 'Invalid credentials' });
         }
         
-        // Login successful!
+        // Set session
         req.session.user_id = user.id;
+        
+        console.log('Login successful, session ID:', req.session.user_id);
 
-        // **Security Note:** Never send the password hash back to the client.
-        // We exclude the 'password' property from the user object sent in the response.
         const { password: _, ...userData } = user;
 
         res.json({ message: 'Login successful', user: userData });
@@ -185,12 +156,23 @@ app.post('/login', async (req, res) => {
         console.error('Login Database Error:', err);
         res.status(500).json({ message: 'Database error' });
     }
+});
 
-
-   
+app.post('/api/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ message: 'Could not log out' });
+        }
+        res.clearCookie('sessionId');
+        res.json({ message: 'Logged out successfully' });
+    });
 });
 
 app.post('/api/transaction', async (req, res) => {
+    if (!req.session.user_id) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
     const { userId, transactionType, amount} = req.body;
 
     if (!userId || !transactionType || !amount) {
@@ -203,7 +185,6 @@ app.post('/api/transaction', async (req, res) => {
     }
 
     try {
-        // Check balance for withdrawal
         if (transactionType === 'withdraw') {
             const balanceQuery = `
                 SELECT
@@ -227,21 +208,18 @@ app.post('/api/transaction', async (req, res) => {
 
         if (result && result.rowCount === 1) {
             console.log(`Transaction successful: ${transactionType} of ${numericAmount} for User ${userId}.`);
-            // Respond to the client with success message and the new transaction ID
             res.status(201).json({
                 message: 'Transaction recorded successfully.',
                 transactionId: result.rows[0].id,
                 data: { userId, transactionType, amount: numericAmount }
             });
         } else {
-             // This case is unlikely but good for robustness
             res.status(500).json({ error: 'Transaction failed to insert.', detail: result });
         }
 
-    }  catch (error) {
+    } catch (error) {
         console.error('Database insertion error:', error);
 
-        // Handle specific foreign key constraint error (user does not exist)
         if (error.code === '23503') {
             return res.status(404).json({ error: `User with ID ${userId} not found.` });
         }
@@ -250,7 +228,6 @@ app.post('/api/transaction', async (req, res) => {
 });
 
 app.get('/api/user-fullInfo', async (req, res) => {
-
     if (!req.session.user_id) {
         return res.status(401).json({ error: 'Not logged in' });
     }
@@ -261,7 +238,6 @@ app.get('/api/user-fullInfo', async (req, res) => {
     try {
         const userResult = await db.query(sqlGetFullname, [userId]);
 
-
         if (userResult.rows.length === 0){
             return res.status(404).json({ error: 'User not found' });
         }
@@ -271,7 +247,6 @@ app.get('/api/user-fullInfo', async (req, res) => {
         console.error(err);
         res.status(500).json({ error: 'Failed to retrieve data' });
     }
-
 })
 
 app.put('/api/update-profile', async (req, res) => {
@@ -281,7 +256,6 @@ app.put('/api/update-profile', async (req, res) => {
 
     const userId = req.session.user_id;
     const { first_name, last_name, email, position, is_student } = req.body;
-
 
     const updateQuery = `
         UPDATE users
@@ -320,11 +294,8 @@ app.post('/api/upload-profile-pic', upload.none(), async (req, res) => {
         return res.status(401).json({ message: `unauthorized. Please Login.`});
     }
 
-    // Note: File upload disabled due to Vercel's read-only file system.
-    // Switch to Supabase Storage for file uploads.
     const userId = req.session.user_id;
-
-    const profilePicPath = req.body.profilePicture || '/assets/user.png'; // Default or from body if needed
+    const profilePicPath = req.body.profilePicture || '/assets/user.png';
 
     const updateQuery = 'UPDATE users SET profile_pic_url = $1 WHERE id = $2';
 
@@ -337,7 +308,6 @@ app.post('/api/upload-profile-pic', upload.none(), async (req, res) => {
         });
     } catch (err) {
         console.error('Profile Picture Upload Error', err)
-
         res.status(500).json({ message: 'Failed to save profile picture.' });
     }
 })
@@ -354,7 +324,6 @@ app.get('/api/transactions', async (req, res) => {
     try {
         const transactionHistory = await db.query(sqlGetTransactionHistory, [user_id]);
 
-        // Format the response to include date, time, action, amount
         const formattedTransactions = transactionHistory.rows.map(transaction => {
             const date = new Date(transaction.transaction_date);
             const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -389,17 +358,11 @@ app.get('/api/transactions', async (req, res) => {
     }
 });
 
-// app.get('/api/monthly', async (req, res) => {
-//     if (!req.session.user_id) {
-//         return res.status(401).json({ error: 'Not logged in' });
-//     }
-
-//     const user_id = req.session.user_id;
-//     const sqlMonthlyTotal = SELECT
-// ?
-// })
-
 app.get('/api/balance/:userId', async (req, res) => {
+    if (!req.session.user_id) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
     const { userId } = req.params;
     const sql = `
     SELECT (
@@ -418,14 +381,20 @@ app.get('/api/balance/:userId', async (req, res) => {
         });
 
     } catch (error) {
-
         console.error('Database Error:', error);
-
         res.status(500).json({
             success: false,
             message: 'Internal Server Error: Could not calculate balance.'
         })
     }
 })
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'ok',
+        session: req.session.user_id ? 'active' : 'none'
+    });
+});
 
 module.exports = app;

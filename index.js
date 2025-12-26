@@ -311,18 +311,16 @@ app.put('/api/update-profile', async (req, res) => {
     }
 });
 
-app.post('/api/upload-profile-pic', upload.single('profilePicture'), async (req, res) => {
+app.post('/api/upload-profile-pic', upload.none(), async (req, res) => {
     if (!req.session.user_id) {
         return res.status(401).json({ message: `unauthorized. Please Login.`});
     }
 
-    if (!req.file) {
-        return res.status(400).json({ message: 'No File Uploaded'})
-    }
-
+    // Note: File upload disabled due to Vercel's read-only file system.
+    // Switch to Supabase Storage for file uploads.
     const userId = req.session.user_id;
 
-    const profilePicPath = `/assets/profiles/${req.file.filename}`;
+    const profilePicPath = req.body.profilePicture || '/assets/user.png'; // Default or from body if needed
 
     const updateQuery = 'UPDATE users SET profile_pic_url = $1 WHERE id = $2';
 
@@ -334,7 +332,7 @@ app.post('/api/upload-profile-pic', upload.single('profilePicture'), async (req,
             profile_pic_url: profilePicPath
         });
     } catch (err) {
-        console.error('Propile Picture Upload Error', err)
+        console.error('Profile Picture Upload Error', err)
 
         res.status(500).json({ message: 'Failed to save profile picture.' });
     }

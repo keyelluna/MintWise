@@ -50,7 +50,10 @@ const upload = multer({
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: 'https://mint-wise-n7504b5wm-keyels-projects-6665b873.vercel.app/', // Replace with your actual frontend URL
+    credentials: true
+}));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -73,6 +76,7 @@ app.use(session({
   cookie: { 
     maxAge: 30 * 24 * 60 * 60 * 1000,    // 30 days in milliseconds
     secure: process.env.NODE_ENV === 'production' // Only send over HTTPS in production
+    
   }
 }));
 

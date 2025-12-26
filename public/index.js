@@ -26,8 +26,11 @@ function logout() {
     window.location.href = 'index.html';
 }
 
-//======================== S I G N   U P  ===========================================
 
+import supabase from "./config/supabaseClient";
+
+//======================== S I G N   U P  ===========================================
+console.log(supabase)
 const md_breakpooint = 768
 
 const workingChecked = () => {

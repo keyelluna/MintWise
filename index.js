@@ -75,6 +75,8 @@ app.use(session({
   }
 }));
 
+
+
 // Database connection pool for serverless
 // const db = mysql.createPool({
 //     host: process.env.DB_HOST,

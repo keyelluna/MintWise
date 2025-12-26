@@ -791,10 +791,10 @@ function getAuthHeaders() {
     };
 }
 
-import supabase from "./config/supabaseClient";
+
 
 //======================== S I G N   U P  ===========================================
-console.log(supabase)
+
 const md_breakpooint = 768
 
 const workingChecked = () => {

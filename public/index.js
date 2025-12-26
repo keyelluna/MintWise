@@ -773,10 +773,9 @@ function isLoggedIn() {
 // Logout function
 async function logout() {
     try {
-        // Optional: Call a logout endpoint to destroy session on server
         await fetch('/api/logout', { 
             method: 'POST',
-            credentials: 'include' // Important for cookies/sessions
+            credentials: 'include'
         });
     } catch (error) {
         console.error('Logout error:', error);
@@ -785,7 +784,7 @@ async function logout() {
     window.location.href = 'index.html';
 }
 
-// Get headers for API requests (session-based, no token needed)
+// Get headers for API requests
 function getAuthHeaders() {
     return {
         'Content-Type': 'application/json'
@@ -830,6 +829,8 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            console.log('🔵 Signup form submitted');
+
             const firstName = document.querySelector('#fname').value;
             const lastName = document.querySelector('#lname').value;
             const isStudent = document.querySelector('#student').checked;
@@ -853,33 +854,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const requestData = {
+                firstName,
+                lastName,
+                email,
+                password,
+                isStudent,
+                position,
+            };
+
+            console.log('🔵 Sending signup request:', { ...requestData, password: '***' });
+
             try {
                 const response = await fetch('/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include', // IMPORTANT: Include cookies/session
-                    body: JSON.stringify({
-                        firstName,
-                        lastName,
-                        email,
-                        password,
-                        isStudent,
-                        position,
-                    })
+                    credentials: 'include',
+                    body: JSON.stringify(requestData)
                 });
 
+                console.log('🔵 Response status:', response.status);
+                console.log('🔵 Response headers:', Object.fromEntries(response.headers.entries()));
+
                 const data = await response.json();
+                console.log('🔵 Response data:', data);
 
                 if (response.ok) {
-                    // Store only user data (session is handled by cookies)
+                    console.log('✅ Signup successful!');
                     localStorage.setItem('user', JSON.stringify(data.user));
+                    console.log('✅ User saved to localStorage:', data.user);
+                    
+                    // Check if cookies were set
+                    console.log('🍪 All cookies:', document.cookie);
+                    
+                    console.log('🔵 Redirecting to dashboard...');
                     window.location.href = './dashboard.html';
                 } else {
+                    console.error('❌ Signup failed:', data.message);
                     alert('Error: ' + data.message);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to connect to server.');
+                console.error('❌ Network error:', error);
+                alert('Failed to connect to server. Check console for details.');
             }
         });
     }
@@ -890,29 +906,44 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            console.log('🔵 Login form submitted');
+
             const email = document.querySelector('#email').value;
             const password = document.querySelector('#password').value;
+
+            console.log('🔵 Attempting login for:', email);
 
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include', // IMPORTANT: Include cookies/session
+                    credentials: 'include',
                     body: JSON.stringify({ email, password })
                 });
 
+                console.log('🔵 Response status:', response.status);
+                console.log('🔵 Response headers:', Object.fromEntries(response.headers.entries()));
+
                 const data = await response.json();
+                console.log('🔵 Response data:', data);
 
                 if (response.ok) {
-                    // Store only user data (session is handled by cookies)
+                    console.log('✅ Login successful!');
                     localStorage.setItem('user', JSON.stringify(data.user));
+                    console.log('✅ User saved to localStorage:', data.user);
+                    
+                    // Check if cookies were set
+                    console.log('🍪 All cookies:', document.cookie);
+                    
+                    console.log('🔵 Redirecting to dashboard...');
                     window.location.href = './dashboard.html';
                 } else {
+                    console.error('❌ Login failed:', data.message);
                     alert('Login Failed: ' + data.message);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to connect to server.');
+                console.error('❌ Network error:', error);
+                alert('Failed to connect to server. Check console for details.');
             }
         });
     }
@@ -927,17 +958,24 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const isDashboardPage = window.location.pathname.includes('dashboard.html');
     
+    console.log('🔵 Page loaded:', window.location.pathname);
+    console.log('🔵 Is dashboard page:', isDashboardPage);
+    console.log('🔵 Is logged in:', isLoggedIn());
+    
     // Check if user is logged in
     if (!isLoggedIn() && isDashboardPage) {
+        console.log('❌ Not logged in, redirecting to index');
         alert("You are not logged in!");
         window.location.href = 'index.html';
         return;
     }
 
     const storedUser = localStorage.getItem('user');
+    console.log('🔵 User from localStorage:', storedUser);
 
     if (storedUser && isDashboardPage) {
         const userData = JSON.parse(storedUser);
+        console.log('✅ User data loaded:', userData);
 
         userFirstnameElements.forEach(element => {
             element.innerHTML = userData.first_name;
@@ -1093,7 +1131,7 @@ if (cropConfirm) {
                 try {
                     const response = await fetch('/api/upload-profile-pic', {
                         method: 'POST',
-                        credentials: 'include', // Include session cookie
+                        credentials: 'include',
                         body: formData
                     });
 
@@ -1116,7 +1154,6 @@ if (cropConfirm) {
                             userProfileSm.src = data.profile_pic_url;
                         }
 
-                        // Update localStorage
                         const storedUser = localStorage.getItem('user');
                         if (storedUser) {
                             const userData = JSON.parse(storedUser);
@@ -1170,7 +1207,7 @@ if (mdSaveButton) {
             const response = await fetch('/api/update-profile', {
                 method: 'PUT',
                 headers: getAuthHeaders(),
-                credentials: 'include', // Include session cookie
+                credentials: 'include',
                 body: JSON.stringify(updatedData)
             });
 
@@ -1231,7 +1268,7 @@ if (smSaveButton) {
             const response = await fetch('/api/update-profile', {
                 method: 'PUT',
                 headers: getAuthHeaders(),
-                credentials: 'include', // Include session cookie
+                credentials: 'include',
                 body: JSON.stringify(updatedData)
             });
 
@@ -1389,7 +1426,7 @@ async function handleTransaction(type) {
         const response = await fetch('/api/transaction', { 
             method: 'POST',
             headers: getAuthHeaders(),
-            credentials: 'include', // Include session cookie
+            credentials: 'include',
             body: JSON.stringify(transactionData)
         });
 
@@ -1430,7 +1467,7 @@ async function handleTransaction(type) {
 async function fetchData() {
     try {
         const response = await fetch('/api/transactions', {
-            credentials: 'include' // Include session cookie
+            credentials: 'include'
         });
 
         if (response.status === 401 || response.status === 403) {
@@ -1496,7 +1533,7 @@ async function updateBalance() {
 
     try {
         const response = await fetch(`/api/balance/${USER_ID}`, {
-            credentials: 'include' // Include session cookie
+            credentials: 'include'
         });
 
         if (response.status === 401 || response.status === 403) {

@@ -294,22 +294,11 @@ app.post('/api/upload-profile-pic', upload.none(), async (req, res) => {
         return res.status(401).json({ message: `unauthorized. Please Login.`});
     }
 
-    const userId = req.session.user_id;
-    const profilePicPath = req.body.profilePicture || '/assets/user.png';
-
-    const updateQuery = 'UPDATE users SET profile_pic_url = $1 WHERE id = $2';
-
-    try {
-        await db.query(updateQuery, [profilePicPath, userId]);
-
-        res.json({
-            message: 'Profile Picture updated successfully!',
-            profile_pic_url: profilePicPath
-        });
-    } catch (err) {
-        console.error('Profile Picture Upload Error', err)
-        res.status(500).json({ message: 'Failed to save profile picture.' });
-    }
+    // Feature disabled: Return success without updating the database
+    res.json({
+        message: 'Profile Picture feature is currently disabled.',
+        profile_pic_url: '/assets/user.png'
+    });
 })
 
 app.get('/api/transactions', async (req, res) => {

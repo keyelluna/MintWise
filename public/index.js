@@ -763,6 +763,10 @@
 //     }
 // }
 
+//======================== API CONFIGURATION ===========================================
+// IMPORTANT: Change this to your deployed backend URL
+const API_BASE_URL = 'https://mint-wise-eight.vercel.app';
+
 //======================== HELPER FUNCTIONS ===========================================
 
 // Check if user is logged in
@@ -773,7 +777,7 @@ function isLoggedIn() {
 // Logout function
 async function logout() {
     try {
-        await fetch('/api/logout', { 
+        await fetch(`${API_BASE_URL}/api/logout`, { 
             method: 'POST',
             credentials: 'include'
         });
@@ -863,10 +867,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 position,
             };
 
-            console.log('🔵 Sending signup request:', { ...requestData, password: '***' });
+            console.log('🔵 Sending signup request to:', `${API_BASE_URL}/signup`);
+            console.log('🔵 Request data:', { ...requestData, password: '***' });
 
             try {
-                const response = await fetch('/signup', {
+                const response = await fetch(`${API_BASE_URL}/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -912,9 +917,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = document.querySelector('#password').value;
 
             console.log('🔵 Attempting login for:', email);
+            console.log('🔵 Sending login request to:', `${API_BASE_URL}/login`);
 
             try {
-                const response = await fetch('/login', {
+                const response = await fetch(`${API_BASE_URL}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -1129,7 +1135,7 @@ if (cropConfirm) {
                 formData.append('profilePicture', croppedFile);
 
                 try {
-                    const response = await fetch('/api/upload-profile-pic', {
+                    const response = await fetch(`${API_BASE_URL}/api/upload-profile-pic`, {
                         method: 'POST',
                         credentials: 'include',
                         body: formData
@@ -1204,7 +1210,7 @@ if (mdSaveButton) {
         };
 
         try {
-            const response = await fetch('/api/update-profile', {
+            const response = await fetch(`${API_BASE_URL}/api/update-profile`, {
                 method: 'PUT',
                 headers: getAuthHeaders(),
                 credentials: 'include',
@@ -1265,7 +1271,7 @@ if (smSaveButton) {
         };
 
         try {
-            const response = await fetch('/api/update-profile', {
+            const response = await fetch(`${API_BASE_URL}/api/update-profile`, {
                 method: 'PUT',
                 headers: getAuthHeaders(),
                 credentials: 'include',
@@ -1423,7 +1429,7 @@ async function handleTransaction(type) {
     };
 
     try {
-        const response = await fetch('/api/transaction', { 
+        const response = await fetch(`${API_BASE_URL}/api/transaction`, { 
             method: 'POST',
             headers: getAuthHeaders(),
             credentials: 'include',
@@ -1466,7 +1472,7 @@ async function handleTransaction(type) {
 
 async function fetchData() {
     try {
-        const response = await fetch('/api/transactions', {
+        const response = await fetch(`${API_BASE_URL}/api/transactions`, {
             credentials: 'include'
         });
 
@@ -1532,7 +1538,7 @@ async function updateBalance() {
     });
 
     try {
-        const response = await fetch(`/api/balance/${USER_ID}`, {
+        const response = await fetch(`${API_BASE_URL}/api/balance/${USER_ID}`, {
             credentials: 'include'
         });
 

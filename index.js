@@ -2,10 +2,7 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const path = require('path');
 const bcrypt = require('bcryptjs');
-const multer = require('multer');
-const { v4: uuidv4 } = require('uuid');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
@@ -16,6 +13,7 @@ const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
+// Database connection
 const db = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
@@ -23,9 +21,19 @@ const db = new Pool({
     }
 });
 
+// Test database connection
+db.connect((err, client, release) => {
+    if (err) {
+        console.error('Error connecting to database:', err.stack);
+    } else {
+        console.log('Database connected successfully');
+        release();
+    }
+});
+
 // CORS Configuration - MUST come before session
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Add your Vercel frontend URL
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -34,18 +42,17 @@ app.use(cors({
 // Middleware
 app.use(express.json());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 // Session Configuration - AFTER CORS
 app.use(session({
     store: new pgSession({
-        pool: db, // Use pool instead of conString
+        pool: db,
         tableName: 'session'
     }),
     secret: process.env.SESSION_SECRET || 'your-super-secret-key-change-this-in-production',
     resave: false,
     saveUninitialized: false,
-    name: 'sessionId', // Custom cookie name
+    name: 'sessionId',
     cookie: { 
         maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true,
@@ -54,32 +61,15 @@ app.use(session({
     }
 }));
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/assets/profiles/');
-    },
-    filename: (req, file, cb) => {
-       const ext = path.extname(file.originalname);
-        cb(null, uuidv4() + ext);
-    }
-});
-
-const upload = multer({ 
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024},
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'image/gif') {
-            cb(null, true);
-        } else {
-            cb(new Error('Invalid file type. Only JPEG, PNG, or GIF is allowed.'), false);
-        }
-    }
-});
-
 // Routes
-app.post('/signup', upload.none(), async (req, res) => {
+app.post('/signup', async (req, res) => {
     console.log('Signup request received:', req.body);
     const { firstName, lastName, email, password, isStudent, position } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !password) {
+        return res.status(400).json({ message: 'All fields are required.' });
+    }
 
     let hashedPassword;
     try {
@@ -126,6 +116,12 @@ app.post('/signup', upload.none(), async (req, res) => {
 app.post('/login', async (req, res) => {
     console.log('Login request received:', req.body);
     const { email, password } = req.body;
+
+    // Validate required fields
+    if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required.' });
+    }
+
     const selectQuery = 'SELECT * FROM users WHERE email = $1';
 
     try {
@@ -173,7 +169,7 @@ app.post('/api/transaction', async (req, res) => {
         return res.status(401).json({ error: 'Not logged in' });
     }
 
-    const { userId, transactionType, amount} = req.body;
+    const { userId, transactionType, amount } = req.body;
 
     if (!userId || !transactionType || !amount) {
         return res.status(400).json({ error: 'Missing required fields: userId, transactionType, or amount.' });
@@ -247,7 +243,7 @@ app.get('/api/user-fullInfo', async (req, res) => {
         console.error(err);
         res.status(500).json({ error: 'Failed to retrieve data' });
     }
-})
+});
 
 app.put('/api/update-profile', async (req, res) => {
     if (!req.session.user_id) {
@@ -289,9 +285,9 @@ app.put('/api/update-profile', async (req, res) => {
     }
 });
 
-app.post('/api/upload-profile-pic', upload.none(), async (req, res) => {
+app.post('/api/upload-profile-pic', async (req, res) => {
     if (!req.session.user_id) {
-        return res.status(401).json({ message: `unauthorized. Please Login.`});
+        return res.status(401).json({ message: 'Unauthorized. Please Login.'});
     }
 
     // Feature disabled: Return success without updating the database
@@ -299,7 +295,7 @@ app.post('/api/upload-profile-pic', upload.none(), async (req, res) => {
         message: 'Profile Picture feature is currently disabled.',
         profile_pic_url: '/assets/user.png'
     });
-})
+});
 
 app.get('/api/transactions', async (req, res) => {
     if (!req.session.user_id) {
@@ -308,7 +304,7 @@ app.get('/api/transactions', async (req, res) => {
 
     const user_id = req.session.user_id;
     const sqlGetTransactionHistory = "SELECT transaction_date, transaction_type, amount FROM deposit_and_withdraw WHERE user_id = $1 ORDER BY transaction_date DESC";
-    const sqlGetMonthlyAmount = "SELECT TO_CHAR(transaction_date, 'YYYY-MM') AS month_period, SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END) - SUM(CASE WHEN transaction_type = 'withdraw' THEN amount ELSE 0 END) AS monthly_balance FROM deposit_and_withdraw WHERE user_id = $1 GROUP BY month_period ORDER BY month_period DESC"
+    const sqlGetMonthlyAmount = "SELECT TO_CHAR(transaction_date, 'YYYY-MM') AS month_period, SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END) - SUM(CASE WHEN transaction_type = 'withdraw' THEN amount ELSE 0 END) AS monthly_balance FROM deposit_and_withdraw WHERE user_id = $1 GROUP BY month_period ORDER BY month_period DESC";
 
     try {
         const transactionHistory = await db.query(sqlGetTransactionHistory, [user_id]);
@@ -358,7 +354,7 @@ app.get('/api/balance/:userId', async (req, res) => {
         SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END) -
         SUM(CASE WHEN transaction_type = 'withdraw' THEN amount ELSE 0 END)
     ) AS balance
-    FROM deposit_and_withdraw WHERE user_id = $1`
+    FROM deposit_and_withdraw WHERE user_id = $1`;
 
     try {
         const rows = await db.query(sql, [userId]);
@@ -374,16 +370,52 @@ app.get('/api/balance/:userId', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Internal Server Error: Could not calculate balance.'
-        })
+        });
     }
-})
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'ok',
-        session: req.session.user_id ? 'active' : 'none'
+        session: req.session.user_id ? 'active' : 'none',
+        timestamp: new Date().toISOString()
     });
 });
+
+// Root endpoint
+app.get('/', (req, res) => {
+    res.json({ 
+        message: 'API is running',
+        endpoints: [
+            'POST /signup',
+            'POST /login',
+            'POST /api/logout',
+            'POST /api/transaction',
+            'GET /api/user-fullInfo',
+            'PUT /api/update-profile',
+            'POST /api/upload-profile-pic',
+            'GET /api/transactions',
+            'GET /api/balance/:userId',
+            'GET /api/health'
+        ]
+    });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).json({ 
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'production' ? 'An error occurred' : err.message
+    });
+});
+
+// Start server (for local development)
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
 
 module.exports = app;
